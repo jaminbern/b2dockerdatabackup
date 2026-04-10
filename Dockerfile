@@ -13,14 +13,10 @@ RUN apk add --no-cache \
 
 COPY backup.sh /backup.sh
 COPY restore.sh /restore.sh
-RUN chmod +x /backup.sh /restore.sh
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /backup.sh /restore.sh /entrypoint.sh
 
-# Default schedule: 3 AM UTC daily
 ENV BACKUP_CRON="0 3 * * *"
 ENV BACKUP_RETENTION_DAYS=30
 
-CMD echo "${BACKUP_CRON} /backup.sh >> /var/log/backup.log 2>&1" > /etc/crontabs/root \
-    && echo "Backup scheduled: ${BACKUP_CRON}" \
-    && touch /var/log/backup.log \
-    && /backup.sh >> /var/log/backup.log 2>&1 \
-    && crond -f -l 2 & tail -f /var/log/backup.log
+CMD ["/entrypoint.sh"]
