@@ -1,0 +1,46 @@
+# Example: add this service to any docker-compose.yml
+
+services:
+  backup:
+    image: ghcr.io/jaminbern/docker-backup:latest
+    # Or build locally:
+    # build: ./path/to/docker-backup
+    environment:
+      # Project name (prefixes all backup files)
+      - PROJECT_NAME=myproject
+
+      # Schedule (cron format, default: 3 AM UTC daily)
+      - BACKUP_CRON=0 3 * * *
+
+      # Local retention (days, default: 30)
+      - BACKUP_RETENTION_DAYS=30
+
+      # ── PostgreSQL databases ──
+      # Format: label:host:port:user:password:dbname
+      # Multiple databases: comma-separated
+      - POSTGRES_DATABASES=main:db:5432:postgres:secret:my_database
+
+      # ── MySQL databases (optional) ──
+      # - MYSQL_DATABASES=main:db:3306:root:secret:my_database
+
+      # ── File backups (optional) ──
+      # Format: label:/container/path
+      # Mount the host paths as volumes below
+      # - BACKUP_PATHS=uploads:/data/uploads,config:/data/config
+
+      # ── Backblaze B2 (optional) ──
+      - B2_APPLICATION_KEY_ID=your_key_id
+      - B2_APPLICATION_KEY=your_key
+      - B2_BUCKET_NAME=your_bucket
+      - B2_PREFIX=myproject-backups
+    volumes:
+      - backups:/backups
+      # Mount any directories you want to back up:
+      # - /host/path/to/uploads:/data/uploads:ro
+      # - /host/path/to/config:/data/config:ro
+    networks:
+      - internal
+    restart: unless-stopped
+
+volumes:
+  backups:
